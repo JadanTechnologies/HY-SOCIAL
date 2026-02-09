@@ -8,9 +8,9 @@ const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 mb-16">
           <div className="col-span-2">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 bg-gradient-to-tr from-purple-600 to-blue-500 rounded-lg flex items-center justify-center font-bold text-lg tracking-tighter">
-                HY
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 flex items-center justify-center">
+                <img src="logo.png" alt="HY Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-xl font-bold tracking-tight">HYPER SPACE</span>
             </div>
@@ -64,7 +64,6 @@ const Footer: React.FC = () => {
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-purple-500/50"
                />
                <button className="p-2 bg-white text-black rounded-lg">
-                 {/* Added missing ArrowUpRight icon */}
                  <ArrowUpRight size={16} />
                </button>
              </div>

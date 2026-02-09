@@ -21,8 +21,8 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, o
     }`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate('LANDING')}>
-          <div className="w-10 h-10 bg-gradient-to-tr from-purple-600 to-blue-500 rounded-lg flex items-center justify-center font-bold text-2xl tracking-tighter shadow-lg shadow-purple-500/20">
-            HY
+          <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
+            <img src="logo.png" alt="HY Logo" className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]" />
           </div>
           <span className="text-xl font-bold tracking-tight hidden md:block">HYPER SPACE</span>
         </div>

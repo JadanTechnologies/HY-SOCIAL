@@ -40,7 +40,16 @@ const Hologram: React.FC = () => {
             {/* Inner Geometry */}
             <path d="M200 130 L260 165 L260 235 L200 270 L140 235 L140 165 Z" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
             <circle cx="200" cy="200" r="40" fill="url(#holoGrad)" className="opacity-20 blur-sm" />
-            <text x="200" y="215" textAnchor="middle" fill="white" fontSize="40" fontWeight="bold" style={{ filter: 'drop-shadow(0 0 5px white)' }}>HY</text>
+            
+            {/* Logo Image Replacement */}
+            <image 
+              href="logo.png" 
+              x="150" 
+              y="150" 
+              height="100" 
+              width="100" 
+              style={{ filter: 'brightness(1.5) drop-shadow(0 0 10px rgba(255,255,255,0.5))' }}
+            />
           </g>
 
           {/* Floating Data Nodes */}
