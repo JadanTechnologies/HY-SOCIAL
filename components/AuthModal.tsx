@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { X, Mail, Phone, Globe, Shield, ArrowRight, CheckCircle2, AlertCircle, Gift } from 'lucide-react';
-import { User } from '../App';
+import { X, Mail, Phone, Globe, Shield, ArrowRight, CheckCircle2, AlertCircle, Gift, Terminal, Sparkles, Youtube } from 'lucide-react';
+import { User, YouTubeVideo } from '../App';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -22,6 +22,61 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
+
+  const handleDemoLogin = () => {
+    setLoading(true);
+    
+    const mockVideos: YouTubeVideo[] = [
+      { id: 'dQw4w9WgXcQ', title: 'HY Multiverse Launch Trailer', thumbnail: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=600', views: '2.4M', publishedAt: '2 days ago' },
+      { id: '9bZkp7q19f0', title: 'Decentralized Streaming 101', thumbnail: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=600', views: '850K', publishedAt: '1 week ago' },
+      { id: 'k9vMkL_L6nU', title: 'Why I moved from YT to HY', thumbnail: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=600', views: '1.1M', publishedAt: '3 weeks ago' },
+    ];
+
+    setTimeout(() => {
+      onSuccess({
+        username: 'demo_creator',
+        email: 'demo@hy.space',
+        phone: '+1 (234) 567-890',
+        referralCode: 'HY_OFFICIAL',
+        isAuthenticated: true,
+        bio: 'Official Platform Tester. Exploring every corner of the creator economy.',
+        location: 'Metaverse HQ',
+        followers: 15420,
+        following: 120,
+        referrals: 84,
+        socialLinks: {
+          youtube: '@hy_demo',
+          instagram: 'hy.official',
+          tiktok: 'hy.protocol'
+        },
+        stats: {
+          earningsHY: '12,450.00',
+          streamingHours: 842,
+          totalViews: '3.4M'
+        },
+        balances: {
+          NGN: 750000, // Large balance for testing data topups
+          USD: 12500.00,
+          HY: 50000.00
+        },
+        dataBalanceMB: 5120, // 5GB initial data
+        milestonesClaimed: [100, 500, 1000],
+        referralEarningsHY: 1200,
+        rewardHistory: [
+          { id: 'rew-1', type: 'System Grant', amount: '+5000MB Data', timestamp: '1h ago' },
+          { id: 'rew-2', type: 'Demo Bonus', amount: '+50000 $HY', timestamp: '2h ago' }
+        ],
+        youtubeLinked: true,
+        youtubeChannelName: 'HY Demo Studio',
+        youtubeSubscribers: '15.2K',
+        youtubeRecentVideos: mockVideos,
+        isReseller: true,
+        resellerMarkup: 7.5,
+        resellerProfitNGN: 42500
+      });
+      setLoading(false);
+    }, 1500);
+  };
 
   const handleGoogleLogin = () => {
     setLoading(true);
@@ -75,14 +130,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           USD: 1450.50,
           HY: 2450.80
         },
-        // Initialize Reward Data with Welcome Bonus
-        dataBalanceMB: 30, // 30MB Welcome Bonus
+        dataBalanceMB: 30,
         milestonesClaimed: [],
         referralEarningsHY: 0,
         rewardHistory: [
           { id: 'welcome-bonus', type: 'Welcome Bonus', amount: '+30MB Data', timestamp: 'Just now' }
         ],
-        // Reseller Init
         isReseller: true,
         resellerMarkup: 5,
         resellerProfitNGN: 0
@@ -97,6 +150,31 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <h3 className="text-2xl font-bold text-center mb-6 text-space">Enter Hyper Space</h3>
+            
+            {/* Demo Login Button */}
+            <button 
+              onClick={handleDemoLogin}
+              disabled={loading}
+              className="w-full py-5 rounded-2xl bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-between px-6 hover:bg-indigo-600/20 transition-all group relative overflow-hidden"
+            >
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="p-2 bg-indigo-600 rounded-lg group-hover:scale-110 transition-transform">
+                   <Terminal size={20} className="text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-indigo-400">Quick Demo Access</p>
+                  <p className="text-[10px] text-indigo-300/60 uppercase font-bold tracking-widest">Pre-loaded Assets</p>
+                </div>
+              </div>
+              <Sparkles size={20} className="text-indigo-400/50 group-hover:rotate-12 transition-transform" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform"></div>
+            </button>
+
+            <div className="relative py-4 flex items-center justify-center">
+               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+               <span className="relative px-4 bg-[#030014] text-[10px] font-bold text-gray-600 uppercase tracking-widest">Or standard link</span>
+            </div>
+
             <button 
               onClick={handleGoogleLogin}
               className="w-full py-4 rounded-xl glass-panel border-white/10 flex items-center justify-center gap-3 hover:bg-white/10 transition-all font-semibold"
