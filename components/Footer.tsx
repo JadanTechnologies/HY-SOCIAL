@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Github, Twitter, Instagram, Youtube, Linkedin, Mail, ArrowUpRight } from 'lucide-react';
+import Logo from './Logo';
 
 const Footer: React.FC = () => {
   return (
@@ -8,11 +9,8 @@ const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 mb-16">
           <div className="col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 flex items-center justify-center">
-                <img src="logo.png" alt="HY Logo" className="w-full h-full object-contain" />
-              </div>
-              <span className="text-xl font-bold tracking-tight">HYPER SPACE</span>
+            <div className="mb-6">
+              <Logo size={40} showText={true} />
             </div>
             <p className="text-gray-500 text-sm mb-6 leading-relaxed max-w-xs">
               Building the next generation of social and financial infrastructure for the creator economy. Powered by decentralization.

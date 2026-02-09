@@ -4,7 +4,8 @@ import {
   Search, TrendingUp, Users, MapPin, Sparkles, Heart, 
   MessageCircle, Share2, Play, MoreVertical, Loader2, Plus, 
   Image as ImageIcon, Video as VideoIcon, Send, Rocket,
-  Edit3, X, Youtube, Languages, FileSearch, ShieldCheck
+  Edit3, X, Youtube, Languages, FileSearch, ShieldCheck,
+  Clock, Monitor
 } from 'lucide-react';
 import { User, YouTubeVideo } from '../App';
 import CreatePostModal, { PostDraft } from './CreatePostModal';
@@ -25,6 +26,12 @@ interface FeedItem {
     thumbnail?: string;
     tags?: string[];
     youtubeId?: string;
+    metadata?: {
+      duration?: number;
+      width?: number;
+      height?: number;
+      size?: number;
+    };
   };
   stats: {
     likes: number;
@@ -76,6 +83,12 @@ const generateMockItem = (index: number): FeedItem => {
       thumbnail: type === 'VIDEO' ? MOCK_MEDIA[(index + 1) % 4] : undefined,
       tags: ['HyperSpace', 'Web3'],
       youtubeId: type === 'YOUTUBE' ? 'dQw4w9WgXcQ' : undefined,
+      metadata: type === 'VIDEO' ? {
+        duration: 45 + index,
+        width: 1920,
+        height: 1080,
+        size: 1024 * 1024 * 5
+      } : undefined
     },
     stats: {
       likes: Math.floor(Math.random() * 5000),
@@ -158,7 +171,13 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
       setItems(prev => prev.map(item => item.id === editingPost.id ? {
         ...item,
         type: draft.type as any,
-        content: { ...item.content, text: draft.caption, tags: draft.tags, mediaUrl: draft.mediaUrl },
+        content: { 
+          ...item.content, 
+          text: draft.caption, 
+          tags: draft.tags, 
+          mediaUrl: draft.mediaUrl,
+          metadata: draft.metadata 
+        },
         privacy: draft.privacy,
         isBoosted: draft.isBoosted
       } : item));
@@ -176,6 +195,7 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
           text: draft.caption,
           mediaUrl: draft.mediaUrl,
           tags: draft.tags,
+          metadata: draft.metadata
         },
         stats: { likes: 0, comments: 0, shares: 0 },
         timestamp: 'Just now',
@@ -202,6 +222,21 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
   const handleBoostPost = (id: string) => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, isBoosted: true } : item));
     setActiveMenuId(null);
+  };
+
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return '';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getResolutionTag = (w?: number, h?: number) => {
+    if (!w || !h) return null;
+    if (w >= 3840) return '4K';
+    if (w >= 2560) return '2K';
+    if (w >= 1920) return 'HD';
+    return null;
   };
 
   const filteredItems = items.filter(item => {
@@ -436,9 +471,25 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
                   controls
                   className="w-full h-auto max-h-[500px] object-contain transition-transform duration-700"
                 />
-                <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-white/10 pointer-events-none z-10">
-                  VIDEO
+                
+                {/* Video Technical Overlay */}
+                <div className="absolute top-4 right-4 flex flex-col items-end gap-2 z-10 pointer-events-none">
+                  <div className="bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-white/10">
+                    VIDEO
+                  </div>
+                  {getResolutionTag(item.content.metadata?.width, item.content.metadata?.height) && (
+                    <div className="bg-blue-600/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-white border border-white/10">
+                      {getResolutionTag(item.content.metadata?.width, item.content.metadata?.height)}
+                    </div>
+                  )}
                 </div>
+
+                {/* Duration Tag */}
+                {item.content.metadata?.duration && (
+                  <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg text-xs font-bold text-white flex items-center gap-1 border border-white/10 z-10">
+                    <Clock size={12} /> {formatDuration(item.content.metadata.duration)}
+                  </div>
+                )}
               </div>
             )}
 
@@ -504,7 +555,8 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
           tags: editingPost.content.tags || [],
           privacy: editingPost.privacy,
           mediaUrl: editingPost.content.mediaUrl,
-          isBoosted: editingPost.isBoosted
+          isBoosted: editingPost.isBoosted,
+          metadata: editingPost.content.metadata
         } : undefined}
       />
     </div>

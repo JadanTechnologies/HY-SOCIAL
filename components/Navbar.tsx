@@ -2,6 +2,7 @@
 import React from 'react';
 import { Menu, Wallet, LogOut, LayoutDashboard, Home, Search, MessageSquare, PlaySquare, Radio, Trophy, Smartphone, Brain } from 'lucide-react';
 import { User, AppState } from '../App';
+import Logo from './Logo';
 
 interface NavbarProps {
   scrolled: boolean;
@@ -21,10 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, o
     }`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate('LANDING')}>
-          <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
-            <img src="logo.png" alt="HY Logo" className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]" />
-          </div>
-          <span className="text-xl font-bold tracking-tight hidden md:block">HYPER SPACE</span>
+          <Logo size={40} showText={true} />
         </div>
 
         <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-300">

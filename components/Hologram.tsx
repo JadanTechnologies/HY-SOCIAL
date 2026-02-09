@@ -17,9 +17,10 @@ const Hologram: React.FC = () => {
               <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.5" />
               <stop offset="100%" stopColor="#ec4899" stopOpacity="0.8" />
             </linearGradient>
-            <filter id="blurFilter">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
-            </filter>
+            <linearGradient id="hyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" /> {/* Green */}
+              <stop offset="100%" stopColor="#dc2626" /> {/* Red */}
+            </linearGradient>
           </defs>
 
           {/* Rotating Outer Ring */}
@@ -37,19 +38,36 @@ const Hologram: React.FC = () => {
               strokeWidth="2"
               className="hologram-glow"
             />
-            {/* Inner Geometry */}
-            <path d="M200 130 L260 165 L260 235 L200 270 L140 235 L140 165 Z" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-            <circle cx="200" cy="200" r="40" fill="url(#holoGrad)" className="opacity-20 blur-sm" />
             
-            {/* Logo Image Replacement */}
-            <image 
-              href="logo.png" 
-              x="150" 
-              y="150" 
-              height="100" 
-              width="100" 
-              style={{ filter: 'brightness(1.5) drop-shadow(0 0 10px rgba(255,255,255,0.5))' }}
-            />
+            {/* The "hy" logo integrated directly into the SVG as requested */}
+            <g transform="translate(100, 100) scale(0.5)">
+               {/* Lowercase "hy" with brand gradient */}
+               <text 
+                x="200" 
+                y="300" 
+                textAnchor="middle" 
+                fontFamily="Arial, sans-serif" 
+                fontWeight="900" 
+                fontSize="240" 
+                fill="url(#hyGradient)"
+                style={{ letterSpacing: '-15px', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.4))' }}
+              >
+                hy
+              </text>
+              {/* Brain Network Mesh */}
+              <g transform="translate(0, -20)" opacity="0.9">
+                <path d="M200 60 C140 60 90 110 90 170 C90 190 95 210 105 225 L295 225 C305 210 310 190 310 170 C310 110 260 60 200 60Z" stroke="white" strokeWidth="4" fill="none" opacity="0.2" />
+                <path d="M150 70 L250 70 M120 100 L280 100 M100 140 L300 140 M100 180 L300 180" stroke="white" strokeWidth="2" opacity="0.4" />
+                <path d="M200 60 L200 220 M150 70 L120 200 M250 70 L280 200" stroke="white" strokeWidth="2" opacity="0.4" />
+                {[
+                  {x: 200, y: 60}, {x: 150, y: 70}, {x: 250, y: 70}, 
+                  {x: 120, y: 100}, {x: 280, y: 100}, {x: 100, y: 140}, 
+                  {x: 300, y: 140}, {x: 105, y: 180}, {x: 295, y: 180}
+                ].map((node, i) => (
+                  <circle key={i} cx={node.x} cy={node.y} r="10" fill="white" stroke="url(#hyGradient)" strokeWidth="4" />
+                ))}
+              </g>
+            </g>
           </g>
 
           {/* Floating Data Nodes */}
