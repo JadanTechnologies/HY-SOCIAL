@@ -2,6 +2,7 @@
   "name": "HY - The Creator Multiverse",
   "description": "A high-performance landing page for HY, a social ecosystem blending YouTube-like services with a powerful cryptocurrency business engine, featuring a magical interactive hologram.",
   "requestFramePermissions": [
-    "camera"
+    "camera",
+    "microphone"
   ]
 }

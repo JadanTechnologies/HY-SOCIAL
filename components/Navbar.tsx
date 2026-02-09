@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Menu, Wallet, LogOut, LayoutDashboard, Home, Search } from 'lucide-react';
+import { Menu, Wallet, LogOut, LayoutDashboard, Home, Search, MessageSquare, PlaySquare, Radio } from 'lucide-react';
 import { User, AppState } from '../App';
 
 interface NavbarProps {
@@ -13,9 +13,11 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, onAuthClick, onLogout }) => {
+  const isImmersive = appState === 'VIDEO_FEED' || appState === 'LIVE';
+
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      scrolled || appState !== 'LANDING' ? 'bg-[#030014]/80 backdrop-blur-lg border-b border-white/10 py-3' : 'bg-transparent py-6'
+      scrolled || appState !== 'LANDING' ? (isImmersive ? 'bg-black/20 backdrop-blur-md border-b border-white/5 py-2' : 'bg-[#030014]/80 backdrop-blur-lg border-b border-white/10 py-3') : 'bg-transparent py-6'
     }`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate('LANDING')}>
@@ -25,7 +27,7 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, o
           <span className="text-xl font-bold tracking-tight hidden md:block">HYPER SPACE</span>
         </div>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
+        <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-gray-300">
           <button 
             onClick={() => onNavigate('LANDING')} 
             className={`transition-colors ${appState === 'LANDING' ? 'text-white' : 'hover:text-white'}`}
@@ -33,15 +35,33 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, o
             Ecosystem
           </button>
           {user && (
-            <button 
-              onClick={() => onNavigate('FEED')} 
-              className={`transition-colors flex items-center gap-2 ${appState === 'FEED' ? 'text-white' : 'hover:text-white'}`}
-            >
-              <Home size={16} /> Feed
-            </button>
+            <>
+              <button 
+                onClick={() => onNavigate('FEED')} 
+                className={`transition-colors flex items-center gap-2 ${appState === 'FEED' ? 'text-white' : 'hover:text-white'}`}
+              >
+                <Home size={16} /> Feed
+              </button>
+              <button 
+                onClick={() => onNavigate('VIDEO_FEED')} 
+                className={`transition-colors flex items-center gap-2 ${appState === 'VIDEO_FEED' ? 'text-white' : 'hover:text-white'}`}
+              >
+                <PlaySquare size={16} /> Shorts
+              </button>
+              <button 
+                onClick={() => onNavigate('LIVE')} 
+                className={`transition-colors flex items-center gap-2 ${appState === 'LIVE' ? 'text-white' : 'hover:text-white'}`}
+              >
+                <Radio size={16} className="text-red-500" /> Live
+              </button>
+              <button 
+                onClick={() => onNavigate('CHAT')} 
+                className={`transition-colors flex items-center gap-2 ${appState === 'CHAT' ? 'text-white' : 'hover:text-white'}`}
+              >
+                <MessageSquare size={16} /> Chat
+              </button>
+            </>
           )}
-          <button className="hover:text-white transition-colors">Token</button>
-          <button className="hover:text-white transition-colors">Governance</button>
         </div>
 
         <div className="flex items-center gap-4">
@@ -79,7 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, o
               </button>
             </>
           )}
-          <button className="md:hidden p-2 text-gray-400">
+          <button className="lg:hidden p-2 text-gray-400">
             <Menu size={24} />
           </button>
         </div>

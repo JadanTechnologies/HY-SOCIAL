@@ -10,6 +10,17 @@ import MagicAssistant from './components/MagicAssistant';
 import AuthModal from './components/AuthModal';
 import ProfileDashboard from './components/ProfileDashboard';
 import HomeFeed from './components/HomeFeed';
+import ChatSystem from './components/ChatSystem';
+import ShortVideoFeed from './components/ShortVideoFeed';
+import LiveSystem from './components/LiveSystem';
+
+export interface YouTubeVideo {
+  id: string;
+  title: string;
+  thumbnail: string;
+  views: string;
+  publishedAt: string;
+}
 
 export interface UserStats {
   earningsHY: string;
@@ -38,9 +49,14 @@ export interface User {
   referrals: number;
   socialLinks: SocialLinks;
   stats: UserStats;
+  // YouTube Integration Data
+  youtubeLinked?: boolean;
+  youtubeChannelName?: string;
+  youtubeSubscribers?: string;
+  youtubeRecentVideos?: YouTubeVideo[];
 }
 
-export type AppState = 'LANDING' | 'FEED' | 'DASHBOARD';
+export type AppState = 'LANDING' | 'FEED' | 'DASHBOARD' | 'CHAT' | 'VIDEO_FEED' | 'LIVE';
 
 const App: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -57,7 +73,7 @@ const App: React.FC = () => {
   const handleLogin = (newUser: User) => {
     setUser(newUser);
     setIsAuthModalOpen(false);
-    setAppState('FEED'); // Go to feed after login
+    setAppState('FEED');
   };
 
   const handleLogout = () => {
@@ -66,26 +82,42 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (appState === 'DASHBOARD' && user) {
-      return <ProfileDashboard user={user} setUser={setUser} onClose={() => setAppState('FEED')} />;
+    if (!user && appState !== 'LANDING') {
+      return (
+        <div className="pt-48 pb-32 text-center px-6">
+          <h2 className="text-4xl font-bold mb-6">Unauthorized Transmission</h2>
+          <p className="text-gray-400 mb-8">You must connect your identity to the multiverse to access this sector.</p>
+          <button 
+            onClick={() => setIsAuthModalOpen(true)}
+            className="px-8 py-4 bg-purple-600 rounded-xl font-bold"
+          >
+            Connect Identity
+          </button>
+        </div>
+      );
     }
-    if (appState === 'FEED' && user) {
-      return <HomeFeed user={user} />;
+
+    switch (appState) {
+      case 'DASHBOARD': return <ProfileDashboard user={user!} setUser={setUser} onClose={() => setAppState('FEED')} />;
+      case 'FEED': return <HomeFeed user={user!} />;
+      case 'CHAT': return <ChatSystem user={user!} />;
+      case 'VIDEO_FEED': return <ShortVideoFeed />;
+      case 'LIVE': return <LiveSystem user={user!} />;
+      default:
+        return (
+          <>
+            <Hero />
+            <VideoServiceSection />
+            <CryptoSection />
+            <Features />
+          </>
+        );
     }
-    return (
-      <>
-        <Hero />
-        <VideoServiceSection />
-        <CryptoSection />
-        <Features />
-      </>
-    );
   };
 
   return (
     <div className="relative min-h-screen">
-      {/* Background Ambience */}
-      <div className="fixed inset-0 pointer-events-none z-0">
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-900/20 blur-[120px] rounded-full"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-900/20 blur-[120px] rounded-full"></div>
       </div>
@@ -99,11 +131,11 @@ const App: React.FC = () => {
         onLogout={handleLogout}
       />
       
-      <main className="relative z-10">
+      <main className={`relative z-10 ${appState === 'VIDEO_FEED' ? 'h-screen overflow-hidden' : ''}`}>
         {renderContent()}
       </main>
 
-      <Footer />
+      {appState !== 'VIDEO_FEED' && appState !== 'LIVE' && <Footer />}
 
       <MagicAssistant />
       

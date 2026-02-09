@@ -2,13 +2,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Search, TrendingUp, Users, MapPin, Sparkles, Heart, 
-  MessageCircle, Share2, Play, MoreVertical, Loader2 
+  MessageCircle, Share2, Play, MoreVertical, Loader2, Plus, 
+  Image as ImageIcon, Video as VideoIcon, Send, Rocket,
+  Edit3, X, Youtube
 } from 'lucide-react';
-import { User } from '../App';
+import { User, YouTubeVideo } from '../App';
+import CreatePostModal, { PostDraft } from './CreatePostModal';
+import YouTubeEmbed from './YouTubeEmbed';
 
 interface FeedItem {
   id: string;
-  type: 'PHOTO' | 'VIDEO' | 'TEXT';
+  type: 'PHOTO' | 'VIDEO' | 'TEXT' | 'YOUTUBE';
   author: {
     name: string;
     username: string;
@@ -18,6 +22,8 @@ interface FeedItem {
     text?: string;
     mediaUrl?: string;
     thumbnail?: string;
+    tags?: string[];
+    youtubeId?: string;
   };
   stats: {
     likes: number;
@@ -26,6 +32,8 @@ interface FeedItem {
   };
   timestamp: string;
   category: string;
+  privacy: 'PUBLIC' | 'FOLLOWERS' | 'PRIVATE';
+  isBoosted?: boolean;
 }
 
 const CATEGORIES = ['Trending', 'Friends', 'Nearby', 'New Creators'];
@@ -45,8 +53,8 @@ const MOCK_MEDIA = [
 ];
 
 const generateMockItem = (index: number): FeedItem => {
-  const types: ('PHOTO' | 'VIDEO' | 'TEXT')[] = ['PHOTO', 'VIDEO', 'TEXT'];
-  const type = types[index % 3];
+  const types: ('PHOTO' | 'VIDEO' | 'TEXT' | 'YOUTUBE')[] = ['PHOTO', 'VIDEO', 'TEXT', 'YOUTUBE'];
+  const type = types[index % 4];
   return {
     id: `item-${index}-${Date.now()}`,
     type,
@@ -57,8 +65,10 @@ const generateMockItem = (index: number): FeedItem => {
     },
     content: {
       text: type === 'TEXT' || Math.random() > 0.5 ? "Exploring the final frontier of the HY Multiverse. This holographic interface is absolutely magic! 🚀 #HyperSpace #Web3" : undefined,
-      mediaUrl: type !== 'TEXT' ? MOCK_MEDIA[index % 4] : undefined,
+      mediaUrl: type !== 'TEXT' && type !== 'YOUTUBE' ? MOCK_MEDIA[index % 4] : undefined,
       thumbnail: type === 'VIDEO' ? MOCK_MEDIA[(index + 1) % 4] : undefined,
+      tags: ['HyperSpace', 'Web3'],
+      youtubeId: type === 'YOUTUBE' ? 'dQw4w9WgXcQ' : undefined,
     },
     stats: {
       likes: Math.floor(Math.random() * 5000),
@@ -67,6 +77,7 @@ const generateMockItem = (index: number): FeedItem => {
     },
     timestamp: `${index + 1}h ago`,
     category: CATEGORIES[index % 4],
+    privacy: 'PUBLIC'
   };
 };
 
@@ -76,6 +87,11 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<FeedItem | null>(null);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [activeYouTube, setActiveYouTube] = useState<string | null>(null);
+
   const observer = useRef<IntersectionObserver | null>(null);
 
   const lastItemRef = useCallback((node: HTMLDivElement) => {
@@ -100,38 +116,107 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
   };
 
   useEffect(() => {
-    // Initial load
     loadMore();
   }, []);
 
+  const handleCreatePost = (draft: PostDraft) => {
+    if (editingPost) {
+      setItems(prev => prev.map(item => item.id === editingPost.id ? {
+        ...item,
+        type: draft.type as any,
+        content: { ...item.content, text: draft.caption, tags: draft.tags, mediaUrl: draft.mediaUrl },
+        privacy: draft.privacy,
+        isBoosted: draft.isBoosted
+      } : item));
+      setEditingPost(null);
+    } else {
+      const newItem: FeedItem = {
+        id: `user-post-${Date.now()}`,
+        type: draft.type as any,
+        author: {
+          name: user.username,
+          username: user.username,
+          avatar: `https://i.pravatar.cc/150?u=${user.username}`,
+        },
+        content: {
+          text: draft.caption,
+          mediaUrl: draft.mediaUrl,
+          tags: draft.tags,
+        },
+        stats: { likes: 0, comments: 0, shares: 0 },
+        timestamp: 'Just now',
+        category: 'New Creators',
+        privacy: draft.privacy,
+        isBoosted: draft.isBoosted
+      };
+      setItems(prev => [newItem, ...prev]);
+    }
+    setIsPostModalOpen(false);
+  };
+
+  const handleDeletePost = (id: string) => {
+    setItems(prev => prev.filter(item => item.id !== id));
+    setActiveMenuId(null);
+  };
+
+  const handleEditPost = (item: FeedItem) => {
+    setEditingPost(item);
+    setIsPostModalOpen(true);
+    setActiveMenuId(null);
+  };
+
+  const handleBoostPost = (id: string) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, isBoosted: true } : item));
+    setActiveMenuId(null);
+  };
+
   const filteredItems = items.filter(item => {
     const matchesCategory = filter === 'Trending' || item.category === filter;
-    const matchesSearch = item.author.username.includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = item.author.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          (item.content.text?.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
   return (
     <div className="pt-24 pb-20 px-6 max-w-2xl mx-auto">
-      {/* Top Search & Filter Bar */}
+      {/* Search & Post Trigger */}
       <div className="sticky top-[73px] z-30 bg-[#030014]/80 backdrop-blur-md py-4 -mx-6 px-6">
-        <div className="relative mb-6">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-          <input 
-            type="text"
-            placeholder="Search users, hashtags, posts..."
-            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 focus:border-purple-500 outline-none transition-all shadow-xl shadow-purple-500/5"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-             <div className="px-2 py-1 rounded-lg bg-purple-600/20 text-purple-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-               <Sparkles size={10} /> AI Enhanced
-             </div>
+        <div className="flex flex-col gap-4">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+            <input 
+              type="text"
+              placeholder="Search the multiverse..."
+              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 focus:border-purple-500 outline-none transition-all shadow-xl shadow-purple-500/5"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => { setEditingPost(null); setIsPostModalOpen(true); }}
+              className="flex-1 glass-panel border-white/10 rounded-2xl p-4 text-left text-gray-500 hover:text-white hover:bg-white/5 transition-all flex items-center gap-3 group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-500 p-0.5 group-hover:scale-110 transition-transform">
+                <div className="w-full h-full rounded-[calc(0.75rem-0.125rem)] bg-slate-900 flex items-center justify-center text-white">
+                  <Plus size={20} />
+                </div>
+              </div>
+              <span className="font-medium">What's happening in your universe?</span>
+            </button>
+            <div className="flex gap-2">
+              <button onClick={() => setIsPostModalOpen(true)} className="p-4 glass-panel border-white/10 rounded-2xl hover:bg-white/5 text-purple-400">
+                <ImageIcon size={20} />
+              </button>
+              <button onClick={() => setIsPostModalOpen(true)} className="p-4 glass-panel border-white/10 rounded-2xl hover:bg-white/5 text-blue-400">
+                <VideoIcon size={20} />
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
+        <div className="flex gap-2 overflow-x-auto mt-6 pb-2 scrollbar-hide no-scrollbar">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
@@ -157,8 +242,12 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
           <div 
             key={item.id} 
             ref={index === filteredItems.length - 1 ? lastItemRef : null}
-            className="glass-panel rounded-[2.5rem] border-white/10 overflow-hidden group animate-in fade-in slide-in-from-bottom-8 duration-500"
+            className={`glass-panel rounded-[2.5rem] border-white/10 overflow-hidden group animate-in fade-in slide-in-from-bottom-8 duration-500 relative ${item.isBoosted ? 'ring-2 ring-purple-500/50 shadow-2xl shadow-purple-500/10' : ''}`}
           >
+            {item.isBoosted && (
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-blue-500 to-pink-500"></div>
+            )}
+
             {/* Author Header */}
             <div className="p-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -166,26 +255,91 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
                   <img src={item.author.avatar} alt={item.author.name} className="w-full h-full rounded-[calc(1rem-0.125rem)] object-cover bg-slate-900" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm leading-tight hover:text-purple-400 cursor-pointer transition-colors">{item.author.name}</h4>
-                  <p className="text-xs text-gray-500">@{item.author.username} • {item.timestamp}</p>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-sm leading-tight hover:text-purple-400 cursor-pointer transition-colors">{item.author.name}</h4>
+                    {item.isBoosted && <Rocket size={12} className="text-purple-400 animate-pulse" />}
+                    {item.type === 'YOUTUBE' && <span className="text-[8px] font-bold uppercase tracking-widest text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 flex items-center gap-1"><Youtube size={8} /> Synced</span>}
+                  </div>
+                  <p className="text-xs text-gray-500">@{item.author.username} • {item.timestamp} {item.privacy !== 'PUBLIC' && `• ${item.privacy}`}</p>
                 </div>
               </div>
-              <button className="p-2 text-gray-500 hover:text-white transition-colors">
-                <MoreVertical size={20} />
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
+                  className="p-2 text-gray-500 hover:text-white transition-colors"
+                >
+                  <MoreVertical size={20} />
+                </button>
+                
+                {activeMenuId === item.id && (
+                  <div className="absolute right-0 top-10 w-48 glass-panel border-white/10 rounded-2xl py-2 z-50 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                    <button onClick={() => handleBoostPost(item.id)} className="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-2 text-purple-400">
+                      <Rocket size={14} /> Boost Post
+                    </button>
+                    {item.author.username === user.username && (
+                      <>
+                        <button onClick={() => handleEditPost(item)} className="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-2">
+                          <Edit3 size={14} /> Edit Post
+                        </button>
+                        <button onClick={() => handleDeletePost(item.id)} className="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-2 text-red-400">
+                          <X size={14} /> Delete Post
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Post Content */}
             {item.content.text && (
               <div className="px-6 pb-4">
                 <p className="text-gray-200 leading-relaxed text-sm">
-                  {item.content.text}
+                  {item.content.text.split(' ').map((word, i) => 
+                    word.startsWith('#') || word.startsWith('@') 
+                      ? <span key={i} className="text-purple-400 font-bold hover:underline cursor-pointer">{word} </span> 
+                      : word + ' '
+                  )}
                 </p>
+                {item.content.tags && item.content.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {item.content.tags.map(tag => (
+                      <span key={tag} className="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-1 rounded-md font-bold uppercase tracking-widest border border-purple-500/20">#{tag}</span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Media */}
-            {item.type !== 'TEXT' && item.content.mediaUrl && (
+            {/* Media / Video Embed */}
+            {item.type === 'YOUTUBE' && item.content.youtubeId && (
+              <div className="px-4 pb-4">
+                {activeYouTube === item.id ? (
+                  <YouTubeEmbed 
+                    videoId={item.content.youtubeId} 
+                    title="Synced Video" 
+                    onClose={() => setActiveYouTube(null)} 
+                  />
+                ) : (
+                  <div 
+                    onClick={() => setActiveYouTube(item.id)}
+                    className="relative aspect-video rounded-3xl overflow-hidden glass-panel border-white/10 cursor-pointer group"
+                  >
+                     <img src={`https://img.youtube.com/vi/${item.content.youtubeId}/maxresdefault.jpg`} className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform" />
+                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-all">
+                        <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform border border-white/30">
+                          <Play size={32} fill="white" className="ml-1 text-white" />
+                        </div>
+                     </div>
+                     <div className="absolute top-4 right-4 bg-red-600 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-white/10 flex items-center gap-1">
+                       <Youtube size={12} /> Sync Library
+                     </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {item.type !== 'TEXT' && item.type !== 'YOUTUBE' && item.content.mediaUrl && (
               <div className="relative group/media overflow-hidden cursor-pointer">
                 <img 
                   src={item.content.mediaUrl} 
@@ -237,12 +391,26 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
           </div>
         )}
 
-        {!hasMore && (
+        {!hasMore && filteredItems.length > 0 && (
           <div className="text-center py-10 text-gray-500 italic text-sm">
             You've reached the edge of the multiverse. 🌌
           </div>
         )}
       </div>
+
+      <CreatePostModal 
+        isOpen={isPostModalOpen}
+        onClose={() => { setIsPostModalOpen(false); setEditingPost(null); }}
+        onSubmit={handleCreatePost}
+        editData={editingPost ? {
+          type: editingPost.type as any,
+          caption: editingPost.content.text || '',
+          tags: editingPost.content.tags || [],
+          privacy: editingPost.privacy,
+          mediaUrl: editingPost.content.mediaUrl,
+          isBoosted: editingPost.isBoosted
+        } : undefined}
+      />
     </div>
   );
 };
