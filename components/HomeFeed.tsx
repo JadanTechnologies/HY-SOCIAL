@@ -53,6 +53,12 @@ const MOCK_MEDIA = [
   'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=800',
 ];
 
+const MOCK_VIDEO_URLS = [
+  'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-lighting-sitting-at-a-bar-9021-large.mp4',
+  'https://assets.mixkit.co/videos/preview/mixkit-cyberpunk-city-street-at-night-with-neon-lights-28434-large.mp4',
+  'https://assets.mixkit.co/videos/preview/mixkit-mysterious-woman-in-a-dark-alley-34293-large.mp4'
+];
+
 const generateMockItem = (index: number): FeedItem => {
   const types: ('PHOTO' | 'VIDEO' | 'TEXT' | 'YOUTUBE')[] = ['PHOTO', 'VIDEO', 'TEXT', 'YOUTUBE'];
   const type = types[index % 4];
@@ -66,7 +72,7 @@ const generateMockItem = (index: number): FeedItem => {
     },
     content: {
       text: type === 'TEXT' || Math.random() > 0.5 ? "Exploring the final frontier of the HY Multiverse. This holographic interface is absolutely magic! 🚀 #HyperSpace #Web3" : undefined,
-      mediaUrl: type !== 'TEXT' && type !== 'YOUTUBE' ? MOCK_MEDIA[index % 4] : undefined,
+      mediaUrl: type === 'VIDEO' ? MOCK_VIDEO_URLS[index % 3] : (type === 'PHOTO' ? MOCK_MEDIA[index % 4] : undefined),
       thumbnail: type === 'VIDEO' ? MOCK_MEDIA[(index + 1) % 4] : undefined,
       tags: ['HyperSpace', 'Web3'],
       youtubeId: type === 'YOUTUBE' ? 'dQw4w9WgXcQ' : undefined,
@@ -422,22 +428,29 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
               </div>
             )}
 
-            {item.type !== 'TEXT' && item.type !== 'YOUTUBE' && item.content.mediaUrl && (
+            {item.type === 'VIDEO' && item.content.mediaUrl && (
+              <div className="relative group/media overflow-hidden bg-black flex items-center justify-center">
+                <video 
+                  src={item.content.mediaUrl} 
+                  poster={item.content.thumbnail}
+                  controls
+                  className="w-full h-auto max-h-[500px] object-contain transition-transform duration-700"
+                />
+                <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-white/10 pointer-events-none z-10">
+                  VIDEO
+                </div>
+              </div>
+            )}
+
+            {item.type === 'PHOTO' && item.content.mediaUrl && (
               <div className="relative group/media overflow-hidden cursor-pointer">
                 <img 
                   src={item.content.mediaUrl} 
                   alt="Post content" 
                   className="w-full h-auto max-h-[500px] object-cover transition-transform duration-700 group-hover/media:scale-105"
                 />
-                {item.type === 'VIDEO' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/media:bg-black/40 transition-all">
-                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover/media:scale-110 transition-transform border border-white/30">
-                      <Play size={32} fill="white" className="ml-1 text-white" />
-                    </div>
-                  </div>
-                )}
                 <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-white/10">
-                  {item.type}
+                  PHOTO
                 </div>
               </div>
             )}
