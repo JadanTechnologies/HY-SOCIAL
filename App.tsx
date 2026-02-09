@@ -16,6 +16,7 @@ import LiveSystem from './components/LiveSystem';
 import WalletSystem from './components/WalletSystem';
 import RewardSystem from './components/RewardSystem';
 import DataTopupSystem from './components/DataTopupSystem';
+import AISystem from './components/AISystem';
 
 export interface YouTubeVideo {
   id: string;
@@ -84,7 +85,7 @@ export interface User {
   resellerProfitNGN: number;
 }
 
-export type AppState = 'LANDING' | 'FEED' | 'DASHBOARD' | 'CHAT' | 'VIDEO_FEED' | 'LIVE' | 'WALLET' | 'REWARDS' | 'DATA_TOPUP';
+export type AppState = 'LANDING' | 'FEED' | 'DASHBOARD' | 'CHAT' | 'VIDEO_FEED' | 'LIVE' | 'WALLET' | 'REWARDS' | 'DATA_TOPUP' | 'AI_SYSTEM';
 
 const App: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -134,6 +135,7 @@ const App: React.FC = () => {
       case 'WALLET': return <WalletSystem user={user!} setUser={setUser} />;
       case 'REWARDS': return <RewardSystem user={user!} setUser={setUser} />;
       case 'DATA_TOPUP': return <DataTopupSystem user={user!} setUser={setUser} />;
+      case 'AI_SYSTEM': return <AISystem user={user!} />;
       default:
         return (
           <>

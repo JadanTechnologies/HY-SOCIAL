@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Menu, Wallet, LogOut, LayoutDashboard, Home, Search, MessageSquare, PlaySquare, Radio, Trophy, Smartphone } from 'lucide-react';
+import { Menu, Wallet, LogOut, LayoutDashboard, Home, Search, MessageSquare, PlaySquare, Radio, Trophy, Smartphone, Brain } from 'lucide-react';
 import { User, AppState } from '../App';
 
 interface NavbarProps {
@@ -47,6 +47,12 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, o
                 className={`transition-colors flex items-center gap-2 ${appState === 'VIDEO_FEED' ? 'text-white' : 'hover:text-white'}`}
               >
                 <PlaySquare size={16} /> Shorts
+              </button>
+              <button 
+                onClick={() => onNavigate('AI_SYSTEM')} 
+                className={`transition-colors flex items-center gap-2 ${appState === 'AI_SYSTEM' ? 'text-white' : 'hover:text-white'}`}
+              >
+                <Brain size={16} className="text-indigo-400" /> AI Hub
               </button>
               <button 
                 onClick={() => onNavigate('DATA_TOPUP')} 

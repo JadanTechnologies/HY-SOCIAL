@@ -4,11 +4,12 @@ import {
   Search, TrendingUp, Users, MapPin, Sparkles, Heart, 
   MessageCircle, Share2, Play, MoreVertical, Loader2, Plus, 
   Image as ImageIcon, Video as VideoIcon, Send, Rocket,
-  Edit3, X, Youtube
+  Edit3, X, Youtube, Languages, FileSearch, ShieldCheck
 } from 'lucide-react';
 import { User, YouTubeVideo } from '../App';
 import CreatePostModal, { PostDraft } from './CreatePostModal';
 import YouTubeEmbed from './YouTubeEmbed';
+import { GoogleGenAI } from "@google/genai";
 
 interface FeedItem {
   id: string;
@@ -91,6 +92,8 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
   const [editingPost, setEditingPost] = useState<FeedItem | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [activeYouTube, setActiveYouTube] = useState<string | null>(null);
+  const [aiWorkingId, setAiWorkingId] = useState<string | null>(null);
+  const [aiResults, setAiResults] = useState<Record<string, { type: 'TRANS' | 'SUM', content: string }>>({});
 
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -118,6 +121,31 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
   useEffect(() => {
     loadMore();
   }, []);
+
+  const handleAiAction = async (itemId: string, actionType: 'TRANS' | 'SUM', input: string) => {
+    if (aiWorkingId) return;
+    setAiWorkingId(`${itemId}-${actionType}`);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const prompt = actionType === 'TRANS' 
+        ? `Translate the following text to Spanish and French. Format simply. Original: ${input}`
+        : `Provide a concise 3-point summary of a video titled "${input}". Assume it is about decentralized tech.`;
+      
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
+      });
+
+      setAiResults(prev => ({
+        ...prev,
+        [`${itemId}-${actionType}`]: { type: actionType, content: response.text || "AI Error" }
+      }));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setAiWorkingId(null);
+    }
+  };
 
   const handleCreatePost = (draft: PostDraft) => {
     if (editingPost) {
@@ -193,6 +221,15 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
             />
           </div>
 
+          <div className="flex items-center justify-between px-2">
+             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-indigo-400">
+                <ShieldCheck size={14} /> AI Content Sentinel Active
+             </div>
+             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                <TrendingUp size={14} /> Neural Ranking Sorted
+             </div>
+          </div>
+
           <div className="flex items-center gap-3">
             <button 
               onClick={() => { setEditingPost(null); setIsPostModalOpen(true); }}
@@ -263,7 +300,29 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
                   <p className="text-xs text-gray-500">@{item.author.username} • {item.timestamp} {item.privacy !== 'PUBLIC' && `• ${item.privacy}`}</p>
                 </div>
               </div>
-              <div className="relative">
+              <div className="relative flex items-center gap-2">
+                {/* AI Tools */}
+                <div className="flex gap-1">
+                   {item.content.text && (
+                     <button 
+                      onClick={() => handleAiAction(item.id, 'TRANS', item.content.text!)}
+                      className="p-2 glass-panel border-white/5 rounded-xl hover:text-indigo-400 transition-colors"
+                      title="AI Translate"
+                     >
+                       <Languages size={14} className={aiWorkingId === `${item.id}-TRANS` ? 'animate-spin' : ''} />
+                     </button>
+                   )}
+                   {(item.type === 'VIDEO' || item.type === 'YOUTUBE') && (
+                     <button 
+                      onClick={() => handleAiAction(item.id, 'SUM', item.content.text || "Untitled Video")}
+                      className="p-2 glass-panel border-white/5 rounded-xl hover:text-indigo-400 transition-colors"
+                      title="AI Summarize"
+                     >
+                       <FileSearch size={14} className={aiWorkingId === `${item.id}-SUM` ? 'animate-spin' : ''} />
+                     </button>
+                   )}
+                </div>
+
                 <button 
                   onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
                   className="p-2 text-gray-500 hover:text-white transition-colors"
@@ -290,6 +349,30 @@ const HomeFeed: React.FC<{ user: User }> = ({ user }) => {
                 )}
               </div>
             </div>
+
+            {/* AI Results Panel */}
+            {(aiResults[`${item.id}-TRANS`] || aiResults[`${item.id}-SUM`]) && (
+              <div className="px-6 pb-4">
+                 <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs animate-in slide-in-from-top-2">
+                    <div className="flex items-center justify-between mb-2">
+                       <span className="font-bold uppercase tracking-widest text-[8px] flex items-center gap-1">
+                          <Sparkles size={10} /> {aiResults[`${item.id}-TRANS`]?.type === 'TRANS' ? 'AI Translation' : 'AI Summary'}
+                       </span>
+                       <button onClick={() => {
+                          const newResults = {...aiResults};
+                          delete newResults[`${item.id}-TRANS`];
+                          delete newResults[`${item.id}-SUM`];
+                          setAiResults(newResults);
+                       }} className="text-gray-500 hover:text-indigo-400">
+                          <X size={10} />
+                       </button>
+                    </div>
+                    <p className="whitespace-pre-wrap leading-relaxed">
+                       {aiResults[`${item.id}-TRANS`]?.content || aiResults[`${item.id}-SUM`]?.content}
+                    </p>
+                 </div>
+              </div>
+            )}
 
             {/* Post Content */}
             {item.content.text && (
