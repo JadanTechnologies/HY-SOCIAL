@@ -60,6 +60,12 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, o
               >
                 <MessageSquare size={16} /> Chat
               </button>
+              <button 
+                onClick={() => onNavigate('WALLET')} 
+                className={`transition-colors flex items-center gap-2 ${appState === 'WALLET' ? 'text-white' : 'hover:text-white'}`}
+              >
+                <Wallet size={16} /> Wallet
+              </button>
             </>
           )}
         </div>

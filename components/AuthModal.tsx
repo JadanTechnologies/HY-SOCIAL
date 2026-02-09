@@ -69,6 +69,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           earningsHY: '2,450.80',
           streamingHours: 142,
           totalViews: '845K'
+        },
+        balances: {
+          NGN: 125000,
+          USD: 1450.50,
+          HY: 2450.80
         }
       });
       setLoading(false);

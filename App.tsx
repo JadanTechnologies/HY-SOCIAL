@@ -13,6 +13,7 @@ import HomeFeed from './components/HomeFeed';
 import ChatSystem from './components/ChatSystem';
 import ShortVideoFeed from './components/ShortVideoFeed';
 import LiveSystem from './components/LiveSystem';
+import WalletSystem from './components/WalletSystem';
 
 export interface YouTubeVideo {
   id: string;
@@ -32,6 +33,12 @@ export interface SocialLinks {
   youtube?: string;
   instagram?: string;
   tiktok?: string;
+}
+
+export interface WalletBalances {
+  NGN: number;
+  USD: number;
+  HY: number;
 }
 
 export interface User {
@@ -54,9 +61,11 @@ export interface User {
   youtubeChannelName?: string;
   youtubeSubscribers?: string;
   youtubeRecentVideos?: YouTubeVideo[];
+  // Wallet Data
+  balances: WalletBalances;
 }
 
-export type AppState = 'LANDING' | 'FEED' | 'DASHBOARD' | 'CHAT' | 'VIDEO_FEED' | 'LIVE';
+export type AppState = 'LANDING' | 'FEED' | 'DASHBOARD' | 'CHAT' | 'VIDEO_FEED' | 'LIVE' | 'WALLET';
 
 const App: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -85,11 +94,11 @@ const App: React.FC = () => {
     if (!user && appState !== 'LANDING') {
       return (
         <div className="pt-48 pb-32 text-center px-6">
-          <h2 className="text-4xl font-bold mb-6">Unauthorized Transmission</h2>
+          <h2 className="text-4xl font-bold mb-6 text-space">Unauthorized Transmission</h2>
           <p className="text-gray-400 mb-8">You must connect your identity to the multiverse to access this sector.</p>
           <button 
             onClick={() => setIsAuthModalOpen(true)}
-            className="px-8 py-4 bg-purple-600 rounded-xl font-bold"
+            className="px-8 py-4 bg-purple-600 rounded-xl font-bold hover:bg-purple-500 transition-all shadow-lg shadow-purple-500/20"
           >
             Connect Identity
           </button>
@@ -103,6 +112,7 @@ const App: React.FC = () => {
       case 'CHAT': return <ChatSystem user={user!} />;
       case 'VIDEO_FEED': return <ShortVideoFeed />;
       case 'LIVE': return <LiveSystem user={user!} />;
+      case 'WALLET': return <WalletSystem user={user!} setUser={setUser} />;
       default:
         return (
           <>
@@ -116,7 +126,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen selection:bg-purple-500/30">
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-900/20 blur-[120px] rounded-full"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-900/20 blur-[120px] rounded-full"></div>
