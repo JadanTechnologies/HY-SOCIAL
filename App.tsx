@@ -1,22 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import Features from './components/Features';
-import CryptoSection from './components/CryptoSection';
-import VideoServiceSection from './components/VideoServiceSection';
-import Footer from './components/Footer';
-import MagicAssistant from './components/MagicAssistant';
-import AuthModal from './components/AuthModal';
-import ProfileDashboard from './components/ProfileDashboard';
-import HomeFeed from './components/HomeFeed';
-import ChatSystem from './components/ChatSystem';
-import ShortVideoFeed from './components/ShortVideoFeed';
-import LiveSystem from './components/LiveSystem';
-import WalletSystem from './components/WalletSystem';
-import RewardSystem from './components/RewardSystem';
-import DataTopupSystem from './components/DataTopupSystem';
-import AISystem from './components/AISystem';
+import Navbar from './components/Navbar.tsx';
+import Hero from './components/Hero.tsx';
+import Features from './components/Features.tsx';
+import CryptoSection from './components/CryptoSection.tsx';
+import VideoServiceSection from './components/VideoServiceSection.tsx';
+import Footer from './components/Footer.tsx';
+import MagicAssistant from './components/MagicAssistant.tsx';
+import AuthModal from './components/AuthModal.tsx';
+import ProfileDashboard from './components/ProfileDashboard.tsx';
+import HomeFeed from './components/HomeFeed.tsx';
+import ChatSystem from './components/ChatSystem.tsx';
+import ShortVideoFeed from './components/ShortVideoFeed.tsx';
+import LiveSystem from './components/LiveSystem.tsx';
+import WalletSystem from './components/WalletSystem.tsx';
+import RewardSystem from './components/RewardSystem.tsx';
+import DataTopupSystem from './components/DataTopupSystem.tsx';
+import AISystem from './components/AISystem.tsx';
 
 export interface YouTubeVideo {
   id: string;
