@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Menu, Wallet, LogOut, LayoutDashboard, Home, Search, MessageSquare, PlaySquare, Radio } from 'lucide-react';
+import { Menu, Wallet, LogOut, LayoutDashboard, Home, Search, MessageSquare, PlaySquare, Radio, Trophy } from 'lucide-react';
 import { User, AppState } from '../App';
 
 interface NavbarProps {
@@ -59,6 +59,12 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, o
                 className={`transition-colors flex items-center gap-2 ${appState === 'CHAT' ? 'text-white' : 'hover:text-white'}`}
               >
                 <MessageSquare size={16} /> Chat
+              </button>
+              <button 
+                onClick={() => onNavigate('REWARDS')} 
+                className={`transition-colors flex items-center gap-2 ${appState === 'REWARDS' ? 'text-white' : 'hover:text-white'}`}
+              >
+                <Trophy size={16} className="text-yellow-500" /> Rewards
               </button>
               <button 
                 onClick={() => onNavigate('WALLET')} 

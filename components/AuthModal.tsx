@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Mail, Phone, Globe, Shield, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Mail, Phone, Globe, Shield, ArrowRight, CheckCircle2, AlertCircle, Gift } from 'lucide-react';
 import { User } from '../App';
 
 interface AuthModalProps {
@@ -74,7 +74,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           NGN: 125000,
           USD: 1450.50,
           HY: 2450.80
-        }
+        },
+        // Initialize Reward Data with Welcome Bonus
+        dataBalanceMB: 30, // 30MB Welcome Bonus
+        milestonesClaimed: [],
+        referralEarningsHY: 0,
+        rewardHistory: [
+          { id: 'welcome-bonus', type: 'Welcome Bonus', amount: '+30MB Data', timestamp: 'Just now' }
+        ]
       });
       setLoading(false);
     }, 1000);
@@ -85,7 +92,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
       case 'SELECT':
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <h3 className="text-2xl font-bold text-center mb-6">Enter Hyper Space</h3>
+            <h3 className="text-2xl font-bold text-center mb-6 text-space">Enter Hyper Space</h3>
             <button 
               onClick={handleGoogleLogin}
               className="w-full py-4 rounded-xl glass-panel border-white/10 flex items-center justify-center gap-3 hover:bg-white/10 transition-all font-semibold"
@@ -187,6 +194,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
                   onChange={(e) => setReferral(e.target.value)}
                 />
               </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/10 flex items-center gap-3">
+               <Gift className="text-purple-400 shrink-0" size={24} />
+               <p className="text-xs text-gray-400"><span className="text-white font-bold">Protocol Bonus:</span> 30MB Data will be credited to your neural-link upon activation.</p>
             </div>
             {error && <div className="text-red-400 text-xs flex items-center gap-2"><AlertCircle size={14} /> {error}</div>}
             <button 

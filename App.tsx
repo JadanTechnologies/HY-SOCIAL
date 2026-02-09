@@ -14,6 +14,7 @@ import ChatSystem from './components/ChatSystem';
 import ShortVideoFeed from './components/ShortVideoFeed';
 import LiveSystem from './components/LiveSystem';
 import WalletSystem from './components/WalletSystem';
+import RewardSystem from './components/RewardSystem';
 
 export interface YouTubeVideo {
   id: string;
@@ -41,6 +42,13 @@ export interface WalletBalances {
   HY: number;
 }
 
+export interface RewardHistory {
+  id: string;
+  type: string;
+  amount: string;
+  timestamp: string;
+}
+
 export interface User {
   username: string;
   email?: string;
@@ -63,9 +71,15 @@ export interface User {
   youtubeRecentVideos?: YouTubeVideo[];
   // Wallet Data
   balances: WalletBalances;
+  // Rewards Data
+  dataBalanceMB: number;
+  lastDailyClaim?: string;
+  milestonesClaimed: number[]; // e.g. [100, 500, 1000]
+  referralEarningsHY: number;
+  rewardHistory: RewardHistory[];
 }
 
-export type AppState = 'LANDING' | 'FEED' | 'DASHBOARD' | 'CHAT' | 'VIDEO_FEED' | 'LIVE' | 'WALLET';
+export type AppState = 'LANDING' | 'FEED' | 'DASHBOARD' | 'CHAT' | 'VIDEO_FEED' | 'LIVE' | 'WALLET' | 'REWARDS';
 
 const App: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -113,6 +127,7 @@ const App: React.FC = () => {
       case 'VIDEO_FEED': return <ShortVideoFeed />;
       case 'LIVE': return <LiveSystem user={user!} />;
       case 'WALLET': return <WalletSystem user={user!} setUser={setUser} />;
+      case 'REWARDS': return <RewardSystem user={user!} setUser={setUser} />;
       default:
         return (
           <>
