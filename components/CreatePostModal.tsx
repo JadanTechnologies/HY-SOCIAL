@@ -1,11 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Image as ImageIcon, Video as VideoIcon, Type, 
   Globe, Users, Lock, Tag, Users as MentionsIcon, 
   Rocket, DollarSign, Sparkles, Loader2, AlertCircle,
-  // Fix: Added missing icon Send
-  Send
+  Send, FileVideo, UploadCloud, Trash2, Clock, Monitor
 } from 'lucide-react';
 
 export interface PostDraft {
@@ -15,7 +14,15 @@ export interface PostDraft {
   mentions: string[];
   privacy: 'PUBLIC' | 'FOLLOWERS' | 'PRIVATE';
   mediaUrl?: string;
+  thumbnail?: string;
   isBoosted?: boolean;
+  metadata?: {
+    duration?: number;
+    width?: number;
+    height?: number;
+    size?: number;
+    name?: string;
+  };
 }
 
 interface CreatePostModalProps {
@@ -32,8 +39,17 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onSu
   const [tags, setTags] = useState<string[]>(editData?.tags || []);
   const [privacy, setPrivacy] = useState<'PUBLIC' | 'FOLLOWERS' | 'PRIVATE'>(editData?.privacy || 'PUBLIC');
   const [isBoosted, setIsBoosted] = useState(editData?.isBoosted || false);
+  
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(editData?.mediaUrl || null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(editData?.thumbnail || null);
+  const [postMetadata, setPostMetadata] = useState<PostDraft['metadata']>(editData?.metadata || undefined);
+  
+  const [isProcessing, setIsProcessing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editData) {
@@ -42,16 +58,111 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onSu
       setTags(editData.tags);
       setPrivacy(editData.privacy);
       setIsBoosted(editData.isBoosted || false);
+      setMediaPreview(editData.mediaUrl || null);
+      setThumbnailPreview(editData.thumbnail || null);
+      setPostMetadata(editData.metadata);
     } else {
-      setType('TEXT');
-      setCaption('');
-      setTags([]);
-      setPrivacy('PUBLIC');
-      setIsBoosted(false);
+      resetForm();
     }
   }, [editData, isOpen]);
 
-  if (!isOpen) return null;
+  const resetForm = () => {
+    setType('TEXT');
+    setCaption('');
+    setTags([]);
+    setPrivacy('PUBLIC');
+    setIsBoosted(false);
+    setSelectedFile(null);
+    setMediaPreview(null);
+    setThumbnailPreview(null);
+    setPostMetadata(undefined);
+    setError('');
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate based on current type
+    if (type === 'PHOTO' && !file.type.startsWith('image/')) {
+      return setError('Please select a valid image file.');
+    }
+    if (type === 'VIDEO' && !file.type.startsWith('video/')) {
+      return setError('Please select a valid video file.');
+    }
+
+    setError('');
+    setIsProcessing(true);
+    setSelectedFile(file);
+    
+    const objectUrl = URL.createObjectURL(file);
+    setMediaPreview(objectUrl);
+
+    if (type === 'VIDEO') {
+      try {
+        await processVideo(file, objectUrl);
+      } catch (err) {
+        setError('Failed to extract video metadata.');
+        console.error(err);
+      }
+    } else {
+      setPostMetadata({
+        size: file.size,
+        name: file.name
+      });
+    }
+    
+    setIsProcessing(false);
+  };
+
+  const processVideo = (file: File, url: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.src = url;
+      video.muted = true;
+      video.playsInline = true;
+
+      video.onloadedmetadata = () => {
+        // Extract dimensions and duration
+        const metadata = {
+          duration: video.duration,
+          width: video.videoWidth,
+          height: video.videoHeight,
+          size: file.size,
+          name: file.name
+        };
+        setPostMetadata(metadata);
+
+        // Seek to 1 second for thumbnail
+        video.currentTime = Math.min(video.duration, 1);
+      };
+
+      video.onseeked = () => {
+        // Generate thumbnail using canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const thumbUrl = canvas.toDataURL('image/jpeg', 0.8);
+          setThumbnailPreview(thumbUrl);
+        }
+        resolve();
+      };
+
+      video.onerror = (e) => reject(e);
+    });
+  };
+
+  const removeMedia = () => {
+    setSelectedFile(null);
+    setMediaPreview(null);
+    setThumbnailPreview(null);
+    setPostMetadata(undefined);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -72,6 +183,10 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onSu
     if (type === 'TEXT' && !caption.trim()) {
       return setError('Please enter some text for your post.');
     }
+    if (type !== 'TEXT' && !mediaPreview) {
+      return setError(`Please upload a ${type === 'PHOTO' ? 'photo' : 'video'}.`);
+    }
+
     setLoading(true);
     // Simulate upload delay
     setTimeout(() => {
@@ -79,13 +194,16 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onSu
         type,
         caption,
         tags,
-        mentions: [], // Basic implementation doesn't parse mentions yet
+        mentions: [],
         privacy,
-        mediaUrl: type !== 'TEXT' ? 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=800' : undefined,
+        mediaUrl: mediaPreview || undefined,
+        thumbnail: thumbnailPreview || undefined,
+        metadata: postMetadata,
         isBoosted
       });
       setLoading(false);
-    }, 800);
+      onClose();
+    }, 1200);
   };
 
   return (
@@ -107,33 +225,87 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onSu
           {/* Content Type Selector */}
           <div className="flex p-1 rounded-2xl bg-white/5 border border-white/5">
             <button 
-              onClick={() => setType('TEXT')}
+              onClick={() => { setType('TEXT'); removeMedia(); }}
               className={`flex-1 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${type === 'TEXT' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'}`}
             >
               <Type size={16} /> Status
             </button>
             <button 
-              onClick={() => setType('PHOTO')}
+              onClick={() => { setType('PHOTO'); removeMedia(); }}
               className={`flex-1 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${type === 'PHOTO' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'}`}
             >
               <ImageIcon size={16} /> Photo
             </button>
             <button 
-              onClick={() => setType('VIDEO')}
+              onClick={() => { setType('VIDEO'); removeMedia(); }}
               className={`flex-1 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${type === 'VIDEO' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'}`}
             >
               <VideoIcon size={16} /> Video
             </button>
           </div>
 
-          {/* Media Placeholder (if not text) */}
+          {/* Media Upload Area */}
           {type !== 'TEXT' && (
-            <div className="aspect-video rounded-3xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
-              <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                {type === 'PHOTO' ? <ImageIcon className="text-purple-400" size={32} /> : <VideoIcon className="text-blue-400" size={32} />}
-              </div>
-              <p className="font-bold text-sm">Upload {type === 'PHOTO' ? 'Image' : 'Video'}</p>
-              <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">DRAG & DROP OR CLICK</p>
+            <div className="space-y-4">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden" 
+                accept={type === 'PHOTO' ? 'image/*' : 'video/*'}
+              />
+              
+              {!mediaPreview ? (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="aspect-video rounded-3xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all cursor-pointer group"
+                >
+                  <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    {type === 'PHOTO' ? <UploadCloud className="text-purple-400" size={32} /> : <FileVideo className="text-blue-400" size={32} />}
+                  </div>
+                  <p className="font-bold text-sm">Upload {type === 'PHOTO' ? 'Image' : 'Video'}</p>
+                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">DRAG & DROP OR CLICK</p>
+                </div>
+              ) : (
+                <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black animate-in fade-in duration-500">
+                  {type === 'PHOTO' ? (
+                    <img src={mediaPreview} className="w-full h-auto max-h-[300px] object-contain mx-auto" alt="Preview" />
+                  ) : (
+                    <div className="relative aspect-video">
+                      <video src={mediaPreview} className="w-full h-full object-contain" />
+                      {isProcessing && (
+                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-3">
+                           <Loader2 className="animate-spin text-blue-400" size={32} />
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Processing Neural Metadata...</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Metadata Overlay */}
+                  {postMetadata && (
+                    <div className="absolute top-4 left-4 flex gap-2">
+                       {postMetadata.duration && (
+                         <div className="px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-bold flex items-center gap-1 border border-white/10">
+                            <Clock size={10} /> {Math.floor(postMetadata.duration)}s
+                         </div>
+                       )}
+                       {postMetadata.width && (
+                         <div className="px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-bold flex items-center gap-1 border border-white/10">
+                            <Monitor size={10} /> {postMetadata.width}x{postMetadata.height}
+                         </div>
+                       )}
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={removeMedia}
+                    className="absolute top-4 right-4 p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-xl transition-all shadow-xl"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -236,7 +408,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onSu
                 <div className="flex flex-col items-end">
                   <span className={`text-xs font-bold ${isBoosted ? 'text-green-400' : ''}`}>50 $HY</span>
                   <div className={`w-8 h-4 rounded-full relative transition-colors ${isBoosted ? 'bg-purple-600' : 'bg-gray-700'}`}>
-                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isBoosted ? 'left-4.5' : 'left-0.5'}`}></div>
+                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isBoosted ? 'left-4' : 'left-0.5'}`}></div>
                   </div>
                 </div>
               </button>
@@ -254,7 +426,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onSu
         <div className="p-6 border-t border-white/5 bg-white/5 flex gap-4">
           <button 
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || isProcessing}
             className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-purple-500/20 transition-all active:scale-95 disabled:opacity-50"
           >
             {loading ? <Loader2 className="animate-spin" size={20} /> : (editData ? 'Apply Updates' : 'Launch Broadcast')}
