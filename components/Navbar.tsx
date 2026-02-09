@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Menu, Wallet, LogOut, LayoutDashboard, Home, Search, MessageSquare, PlaySquare, Radio, Trophy } from 'lucide-react';
+import { Menu, Wallet, LogOut, LayoutDashboard, Home, Search, MessageSquare, PlaySquare, Radio, Trophy, Smartphone } from 'lucide-react';
 import { User, AppState } from '../App';
 
 interface NavbarProps {
@@ -27,7 +27,7 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, o
           <span className="text-xl font-bold tracking-tight hidden md:block">HYPER SPACE</span>
         </div>
 
-        <div className="hidden lg:flex items-center gap-8 text-sm font-medium text-gray-300">
+        <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-300">
           <button 
             onClick={() => onNavigate('LANDING')} 
             className={`transition-colors ${appState === 'LANDING' ? 'text-white' : 'hover:text-white'}`}
@@ -49,16 +49,10 @@ const Navbar: React.FC<NavbarProps> = ({ scrolled, user, appState, onNavigate, o
                 <PlaySquare size={16} /> Shorts
               </button>
               <button 
-                onClick={() => onNavigate('LIVE')} 
-                className={`transition-colors flex items-center gap-2 ${appState === 'LIVE' ? 'text-white' : 'hover:text-white'}`}
+                onClick={() => onNavigate('DATA_TOPUP')} 
+                className={`transition-colors flex items-center gap-2 ${appState === 'DATA_TOPUP' ? 'text-white' : 'hover:text-white'}`}
               >
-                <Radio size={16} className="text-red-500" /> Live
-              </button>
-              <button 
-                onClick={() => onNavigate('CHAT')} 
-                className={`transition-colors flex items-center gap-2 ${appState === 'CHAT' ? 'text-white' : 'hover:text-white'}`}
-              >
-                <MessageSquare size={16} /> Chat
+                <Smartphone size={16} className="text-blue-400" /> Services
               </button>
               <button 
                 onClick={() => onNavigate('REWARDS')} 

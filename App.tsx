@@ -15,6 +15,7 @@ import ShortVideoFeed from './components/ShortVideoFeed';
 import LiveSystem from './components/LiveSystem';
 import WalletSystem from './components/WalletSystem';
 import RewardSystem from './components/RewardSystem';
+import DataTopupSystem from './components/DataTopupSystem';
 
 export interface YouTubeVideo {
   id: string;
@@ -77,9 +78,13 @@ export interface User {
   milestonesClaimed: number[]; // e.g. [100, 500, 1000]
   referralEarningsHY: number;
   rewardHistory: RewardHistory[];
+  // Reseller Data
+  isReseller?: boolean;
+  resellerMarkup: number; // Percentage
+  resellerProfitNGN: number;
 }
 
-export type AppState = 'LANDING' | 'FEED' | 'DASHBOARD' | 'CHAT' | 'VIDEO_FEED' | 'LIVE' | 'WALLET' | 'REWARDS';
+export type AppState = 'LANDING' | 'FEED' | 'DASHBOARD' | 'CHAT' | 'VIDEO_FEED' | 'LIVE' | 'WALLET' | 'REWARDS' | 'DATA_TOPUP';
 
 const App: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -128,6 +133,7 @@ const App: React.FC = () => {
       case 'LIVE': return <LiveSystem user={user!} />;
       case 'WALLET': return <WalletSystem user={user!} setUser={setUser} />;
       case 'REWARDS': return <RewardSystem user={user!} setUser={setUser} />;
+      case 'DATA_TOPUP': return <DataTopupSystem user={user!} setUser={setUser} />;
       default:
         return (
           <>

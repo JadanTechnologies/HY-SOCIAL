@@ -81,7 +81,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
         referralEarningsHY: 0,
         rewardHistory: [
           { id: 'welcome-bonus', type: 'Welcome Bonus', amount: '+30MB Data', timestamp: 'Just now' }
-        ]
+        ],
+        // Reseller Init
+        isReseller: true,
+        resellerMarkup: 5,
+        resellerProfitNGN: 0
       });
       setLoading(false);
     }, 1000);
